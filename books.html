@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'; frame-ancestors 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Books — Kaoru Furubayashi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&family=Noto+Serif+JP:wght@200;300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0a0a0a;
+      --bg2:       #111111;
+      --border:    rgba(255,255,255,0.12);
+      --white:     #ffffff;
+      --muted:     rgba(255,255,255,0.50);
+      --accent:    rgba(255,255,255,0.06);
+      --conveyor-speed: 32s;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Noto Serif JP', serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      padding: 4rem 2rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .page-label {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .page-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      line-height: 1.1;
+      color: var(--white);
+    }
+    .page-title em {
+      font-style: italic;
+      color: var(--muted);
+    }
+    .page-subtitle {
+      margin-top: 0.8rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      line-height: 1.8;
+    }
+    .header-line {
+      width: 3rem;
+      height: 1px;
+      background: var(--border);
+      margin: 2rem 0 0;
+    }
+
+    /* ── LOADING / ERROR ── */
+    .loading-state {
+      padding: 4rem 2rem;
+      text-align: center;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .error-state {
+      padding: 3rem 2rem;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .error-state h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      font-weight: 300;
+      color: var(--white);
+      margin-bottom: 0.8rem;
+    }
+    .error-state p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+    .error-state code {
+      font-size: 0.75rem;
+      background: var(--accent);
+      border: 1px solid var(--border);
+      padding: 0.1rem 0.4rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* ── CONVEYOR ── */
+    .conveyor-section {
+      padding: 3rem 0 4rem;
+      position: relative;
+    }
+    .conveyor-section::before,
+    .conveyor-section::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 120px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .conveyor-section::before {
+      left: 0;
+      background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+    }
+    .conveyor-section::after {
+      right: 0;
+      background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+    }
+    .conveyor-track { overflow: hidden; cursor: default; }
+    .conveyor-track + .conveyor-track { margin-top: 2rem; }
+
+    .conveyor-inner {
+      display: flex;
+      gap: 1.4rem;
+      width: max-content;
+      animation: conveyor-scroll var(--conveyor-speed) linear infinite;
+      will-change: transform;
+    }
+    .conveyor-inner.reverse  { animation-name: conveyor-scroll-reverse; }
+    .conveyor-inner.paused   { animation-play-state: paused; }
+
+    @keyframes conveyor-scroll         { 0% { transform: translateX(0);    } 100% { transform: translateX(-50%); } }
+    @keyframes conveyor-scroll-reverse { 0% { transform: translateX(-50%); } 100% { transform: translateX(0);    } }
+
+    /* ── BOOK CARD ── */
+    .book-card {
+      flex-shrink: 0;
+      width: 160px;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+                  opacity 0.4s ease,
+                  filter 0.4s ease;
+      transform-origin: bottom center;
+    }
+    .book-card:hover { transform: scale(1.12) translateY(-6px); z-index: 5; }
+    .book-card.dimmed {
+      opacity: 0.2;
+      filter: grayscale(60%);
+    }
+    .book-card.dimmed:hover {
+      opacity: 0.5;
+      filter: grayscale(0%);
+    }
+
+    .book-cover-wrap {
+      width: 160px;
+      height: 230px;
+      overflow: hidden;
+      position: relative;
+      background: transparent;
+    }
+    .book-cover-wrap img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      object-position: center;
+      background: transparent;
+      display: block;
+      transition: opacity 0.3s;
+    }
+    .book-cover-wrap .cover-fallback {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 1rem; text-align: center;
+    }
+    .cover-fallback-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.72rem; font-weight: 300;
+      color: var(--white); line-height: 1.5; letter-spacing: 0.04em;
+    }
+    .cover-fallback-author {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.58rem; color: var(--muted);
+      letter-spacing: 0.1em; margin-top: 0.3rem;
+    }
+    .book-card-label {
+      margin-top: 0.6rem;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.7rem; font-weight: 300;
+      color: var(--muted); letter-spacing: 0.02em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 160px; transition: color 0.25s;
+    }
+    .book-card:hover .book-card-label { color: var(--white); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      max-width: 680px; width: 100%;
+      display: flex; gap: 2.4rem; padding: 2.4rem;
+      position: relative;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+    .modal-cover { flex-shrink: 0; width: 140px; }
+    .modal-cover img {
+      width: 140px; height: 200px; object-fit: contain; object-position: center; background: transparent; display: block;
+    }
+    .modal-cover-fallback {
+      width: 140px; height: 200px;
+      background: var(--accent); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; text-align: center;
+    }
+    .modal-cover-fallback span {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.75rem; font-weight: 300;
+      color: var(--muted); line-height: 1.7;
+    }
+    .modal-body { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+    .modal-tag {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.55rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.3rem, 3vw, 1.85rem); font-weight: 300;
+      letter-spacing: 0.04em; line-height: 1.3; color: var(--white);
+    }
+    .modal-author {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.72rem; letter-spacing: 0.16em;
+      color: var(--muted); text-transform: uppercase;
+    }
+    .modal-divider { width: 100%; height: 1px; background: var(--border); }
+    .modal-review {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 0.82rem; font-weight: 300;
+      line-height: 1.95; color: rgba(255,255,255,0.75);
+      letter-spacing: 0.04em; flex: 1;
+    }
+    .modal-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 0.8rem; margin-top: auto;
+    }
+    .modal-genre {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.58rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted);
+      background: var(--accent); border: 1px solid var(--border);
+      padding: 0.25rem 0.7rem;
+    }
+    .modal-amazon {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.62rem; letter-spacing: 0.22em;
+      text-transform: uppercase; color: var(--muted);
+      text-decoration: none; border: 1px solid var(--border);
+      padding: 0.5rem 1.2rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      transition: color 0.25s, border-color 0.25s, letter-spacing 0.25s;
+    }
+    .modal-amazon:hover { color: var(--white); border-color: rgba(255,255,255,0.35); letter-spacing: 0.3em; }
+    .modal-amazon svg { width: 12px; height: 12px; flex-shrink: 0; }
+    .modal-close {
+      position: absolute; top: 1.2rem; right: 1.2rem;
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); cursor: pointer;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, border-color 0.2s;
+      font-size: 1rem; line-height: 1;
+    }
+    .modal-close:hover { color: var(--white); border-color: rgba(255,255,255,0.35); }
+
+    /* ── FILTER / COUNT ── */
+    .filter-bar {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      padding: 0 2rem 1.5rem; max-width: 1100px; margin: 0 auto;
+    }
+    .filter-btn {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.58rem; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--muted);
+      background: transparent; border: 1px solid var(--border);
+      padding: 0.35rem 0.85rem; cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      color: var(--white); border-color: rgba(255,255,255,0.35); background: var(--accent);
+    }
+    .book-count {
+      font-family: 'Jost', sans-serif;
+      font-size: 0.6rem; letter-spacing: 0.18em;
+      color: var(--muted); padding: 0 2rem 1rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 640px) {
+      .modal { flex-direction: column; gap: 1.5rem; padding: 1.8rem 1.4rem; }
+      .modal-cover { width: 100%; display: flex; justify-content: center; }
+      .modal-cover img, .modal-cover-fallback { width: 120px; height: 170px; }
+      .book-card { width: 130px; }
+      .book-cover-wrap { width: 130px; height: 186px; }
+      .book-card-label { max-width: 130px; }
+      .page-header { padding: 3rem 1.2rem 1.5rem; }
+      .filter-bar { padding: 0 1.2rem 1.2rem; }
+      .book-count { padding: 0 1.2rem 1rem; }
+      .conveyor-section::before, .conveyor-section::after { width: 40px; }
+    }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+      padding: 2.4rem 2rem;
+    }
+    .page-footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+    }
+    .footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+    .footer-name span {
+      color: var(--muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      font-family: 'Jost', sans-serif;
+      margin-left: 0.8rem;
+      text-transform: uppercase;
+    }
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      list-style: none;
+    }
+    .footer-links a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.25s, transform 0.25s;
+    }
+    .footer-links a:hover {
+      color: var(--white);
+      transform: translateY(-2px);
+    }
+    .footer-links svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+    .footer-copy {
+      width: 100%;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.25);
+      margin-top: 1.2rem;
+    }
+    @media (max-width: 640px) {
+      .page-footer-inner { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .footer-copy { margin-top: 0.6rem; }
+    }
+
+    /* ── LOADING / ERROR ── */
+    .loading-state {
+      padding: 4rem 2rem; text-align: center;
+      font-family: 'Jost', sans-serif;
+      font-size: 0.65rem; letter-spacing: 0.28em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .error-state { padding: 3rem 2rem; max-width: 640px; margin: 0 auto; }
+    .error-state h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 300; color: var(--white); margin-bottom: 0.8rem;
+    }
+    .error-state p { font-size: 0.8rem; color: var(--muted); line-height: 1.9; }
+    .error-state code {
+      font-size: 0.75rem; background: var(--accent);
+      border: 1px solid var(--border); padding: 0.1rem 0.4rem; color: rgba(255,255,255,0.7);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="page-header">
+    <p class="page-label">Kaoru Furubayashi — Reading List</p>
+    <h1 class="page-title">私をつくる、百冊の本</h1>
+    <p class="page-subtitle">私の思考に影響を与えている本を、100冊キュレーションしました。感性の名刺代わりにでもなればと。</p>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- FILTER -->
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" data-genre="all">All</button>
+  </div>
+  <div class="book-count" id="book-count"></div>
+
+  <!-- CONVEYOR（CSV読み込み後に表示） -->
+  <section class="conveyor-section" id="conveyor-section" style="display:none;">
+    <div class="conveyor-track">
+      <div class="conveyor-inner" id="conveyor-inner"></div>
+    </div>
+    <div class="conveyor-track">
+      <div class="conveyor-inner reverse" id="conveyor-inner-2"></div>
+    </div>
+  </section>
+
+  <!-- LOADING / ERROR -->
+  <div id="loading-state" class="loading-state">Loading…</div>
+  <div id="error-state" class="error-state" style="display:none;"></div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal">
+      <button class="modal-close" id="modal-close" aria-label="閉じる">✕</button>
+      <div class="modal-cover" id="modal-cover"></div>
+      <div class="modal-body">
+        <p  class="modal-tag"    id="modal-tag"></p>
+        <h2 class="modal-title"  id="modal-title"></h2>
+        <p  class="modal-author" id="modal-author"></p>
+        <div class="modal-divider"></div>
+        <p  class="modal-review" id="modal-review"></p>
+        <div class="modal-footer">
+          <span class="modal-genre" id="modal-genre"></span>
+          <a class="modal-amazon" id="modal-amazon" href="#" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.23 15.315c-3.178 2.293-7.787 3.514-11.756 1.869a.387.387 0 0 0-.387.063c-.125.1-.125.263 0 .376 3.656 2.969 9.575 3.906 14.419 1.125a.337.337 0 0 0 .125-.463.356.356 0 0 0-.401-.97zM16.63 13.722c-.163-.213-.988-.1-1.369-.05-.125.013-.144-.1-.031-.175.669-.476 1.769-.338 1.9-.175.131.163-.037 1.263-.663 1.788-.094.081-.188.038-.144-.063.144-.35.469-1.125.306-1.325z"/>
+              <path d="M13.572 8.928V7.79c0-.175.131-.294.294-.294h5.206c.169 0 .3.125.3.294v.994c0 .169-.144.387-.394.731l-2.7 3.862c1.006-.025 2.069.125 2.981.637.206.119.262.294.275.469v1.206c0 .175-.194.381-.394.275-1.65-.863-3.844-1.138-5.006-.063-.169.15-.369-.012-.369-.187v-1.144c0-.187.012-.506.206-.788l3.131-4.488H13.865c-.169 0-.3-.12-.3-.294z"/>
+              <path d="M4.835 14.86h-1.57a.3.3 0 0 1-.288-.263l.006-9.225c0-.163.15-.294.331-.294h1.463c.175.006.318.137.325.3v1.2h.031c.381-1.156 1.1-1.694 2.069-1.694.987 0 1.606.538 2.05 1.694.38-1.156 1.244-1.694 2.169-1.694.656 0 1.375.275 1.813 1.144.494.969.394 2.381.394 3.619l-.006 4.925a.3.3 0 0 1-.3.294H11.76a.3.3 0 0 1-.294-.294V8.459c0-.487.044-1.7-.063-2.156-.163-.775-.65-.987-1.275-.987-.525 0-1.075.35-1.3.913-.225.562-.2 1.506-.2 2.231v5.106c0 .163-.137.294-.3.294H7.066a.298.298 0 0 1-.294-.294l-.006-5.913c0-1.244.206-3.075-1.319-3.075-1.537 0-1.475 1.787-1.475 3.075l-.006 5.913a.3.3 0 0 1-.3.294z"/>
+            </svg>
+            Amazon で見る
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- Excel(.xlsx)読み込み用ライブラリ（ローカル同梱・外部通信なし） -->
+    <script src="lib/xlsx.full.min.js"></script>
+
+    <script>
+    /* ============================================================
+       データソース: books.xlsx（優先） / books.csv（予備）
+       ------------------------------------------------------------
+       本のデータは books.html と同じフォルダに置いた
+       books.xlsx をそのまま読み込みます。CSVへの書き出しは不要です。
+
+       列: id, title, author, genre, cover, amazonUrl, review
+       （1行目は必ずこのヘッダー行にしてください）
+
+       【更新方法】
+       1. books.xlsx を Excel で開いて編集・保存
+       2. サーバー上の books.xlsx を差し替える
+       3. books.html をブラウザでリロードすれば反映されます
+
+       ※ books.xlsx が無い場合のみ books.csv を読みにいきます。
+
+       【cover列】
+       - 画像パスを記入（例: cover/1.jpg）
+       - 空欄にするとタイトル文字のフォールバック表示になります
+    ============================================================ */
+    const XLSX_PATH = 'books.xlsx';
+    const CSV_PATH  = 'books.csv';
+
+    /* ── CSVパーサー（RFC4180準拠・ダブルクォート/改行対応） ── */
+    function parseCSV(raw) {
+      raw = raw.replace(/^\uFEFF/, '');           // BOM除去
+      const rows = [];
+      let row = [], field = '', inQ = false;
+      for (let i = 0; i < raw.length; i++) {
+        const c = raw[i], n = raw[i + 1];
+        if (inQ) {
+          if (c === '"' && n === '"') { field += '"'; i++; }
+          else if (c === '"')         { inQ = false; }
+          else                        { field += c; }
+        } else {
+          if      (c === '"')                { inQ = true; }
+          else if (c === ',')                { row.push(field); field = ''; }
+          else if (c === '\r' && n === '\n') { row.push(field); field=''; rows.push(row); row=[]; i++; }
+          else if (c === '\n' || c === '\r') { row.push(field); field=''; rows.push(row); row=[]; }
+          else                               { field += c; }
+        }
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      const valid = rows.filter(r => r.some(c => c.trim()));
+      const [headers, ...data] = valid;
+      return data.map(r => {
+        const o = {};
+        headers.forEach((h, i) => { o[h.trim()] = (r[i] ?? '').trim(); });
+        return o;
+      });
+    }
+
+    /* ── アプリ本体 ── */
+    (function () {
+      const inner1    = document.getElementById('conveyor-inner');
+      const inner2    = document.getElementById('conveyor-inner-2');
+      const section   = document.getElementById('conveyor-section');
+      const filterBar = document.getElementById('filter-bar');
+      const countEl   = document.getElementById('book-count');
+      const loadEl    = document.getElementById('loading-state');
+      const errEl     = document.getElementById('error-state');
+      const overlay   = document.getElementById('modal-overlay');
+      const closeBtn  = document.getElementById('modal-close');
+
+      let ALL_BOOKS = [];
+      let currentGenre = 'all';
+
+      /* ── Excel(.xlsx) → オブジェクト配列 ── */
+      function parseXLSX(buffer) {
+        if (typeof XLSX === 'undefined') throw new Error('lib/xlsx.full.min.js が読み込めていません');
+        const wb    = XLSX.read(buffer, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const raw   = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+        return raw.map(r => {
+          const o = {};
+          Object.keys(r).forEach(k => { o[String(k).trim()] = String(r[k] ?? '').trim(); });
+          return o;
+        });
+      }
+
+      /* ── データ読み込み: books.xlsx を優先、無ければ books.csv ── */
+      (async function loadData() {
+        try {
+          let books = null;
+
+          // 1) Excel を試す
+          try {
+            const res = await fetch(XLSX_PATH);
+            if (res.ok) {
+              books = parseXLSX(await res.arrayBuffer());
+            }
+          } catch (_) { /* 次の手段へ */ }
+
+          // 2) 無ければ CSV
+          if (!books || !books.length) {
+            const res = await fetch(CSV_PATH);
+            if (!res.ok) throw new Error(`books.xlsx / books.csv のどちらも読み込めませんでした（HTTP ${res.status}）`);
+            books = parseCSV(await res.text());
+          }
+
+          ALL_BOOKS = books.filter(b => b.title || b.cover);
+          if (!ALL_BOOKS.length) throw new Error('データが空です。1行目がヘッダー行（id, title, author, genre, cover, amazonUrl, review）か確認してください');
+          onLoaded();
+
+        } catch (err) {
+          loadEl.style.display = 'none';
+          errEl.style.display  = 'block';
+          errEl.innerHTML = `
+            <h3>データを読み込めませんでした</h3>
+            <p>
+              <code>books.xlsx</code>（または <code>books.csv</code>）を
+              <code>books.html</code> と同じフォルダに置いてください。<br><br>
+              ローカルでHTMLを直接ダブルクリックして開くと、ブラウザのセキュリティ制限でファイルを読み込めません。<br>
+              VS Code の Live Server や <code>python3 -m http.server</code> などの簡易サーバー経由でご覧ください。<br><br>
+              エラー: ${String(err.message).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+            </p>`;
+        }
+      })();
+
+      function onLoaded() {
+        loadEl.style.display  = 'none';
+        section.style.display = '';
+
+        const genres = [...new Set(ALL_BOOKS.map(b => b.genre).filter(Boolean))];
+        genres.forEach(g => {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.dataset.genre = g;
+          btn.textContent = g;
+          filterBar.appendChild(btn);
+        });
+
+        filterBar.addEventListener('click', e => {
+          const btn = e.target.closest('.filter-btn');
+          if (!btn) return;
+          currentGenre = btn.dataset.genre;
+          filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          applyDim(currentGenre);
+        });
+
+        buildBoth(ALL_BOOKS);
+      }
+
+      /* ── コンベア構築 ── */
+      function buildBoth(books) {
+        const speed = Math.max(20, books.length * 2.8);
+        document.documentElement.style.setProperty('--conveyor-speed', `${speed}s`);
+        buildTrack(inner1, books);
+        buildTrack(inner2, [...books].reverse());
+        countEl.textContent = `${books.length} books`;
+      }
+
+      /* ── ジャンルフィルター: 全件表示のまま非該当を暗転 ── */
+      function applyDim(genre) {
+        document.querySelectorAll('.book-card').forEach(card => {
+          if (genre === 'all' || card.dataset.genre === genre) card.classList.remove('dimmed');
+          else card.classList.add('dimmed');
+        });
+      }
+
+      function buildTrack(el, books) {
+        el.innerHTML = '';
+        [...books, ...books].forEach(b => el.appendChild(makeCard(b, el)));
+      }
+
+      function makeCard(book, parentInner) {
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        card.dataset.genre = book.genre || '';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `${book.title} — ${book.author}`);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'book-cover-wrap';
+
+        const coverSrc = safeImageSrc(book.cover);
+        if (coverSrc) {
+          const img = document.createElement('img');
+          img.src = coverSrc; img.alt = book.title; img.loading = 'lazy';
+          wrap.appendChild(img);
+        } else {
+          const fb = document.createElement('div');
+          fb.className = 'cover-fallback';
+          fb.innerHTML = `<span class="cover-fallback-title">${escHtml(book.title)}</span>
+                          <span class="cover-fallback-author">${escHtml(book.author)}</span>`;
+          wrap.appendChild(fb);
+        }
+
+        const lbl = document.createElement('p');
+        lbl.className = 'book-card-label';
+        lbl.textContent = book.title;
+
+        card.appendChild(wrap);
+        card.appendChild(lbl);
+
+        card.addEventListener('mouseenter', () => parentInner.classList.add('paused'));
+        card.addEventListener('mouseleave', () => parentInner.classList.remove('paused'));
+        card.addEventListener('click',  () => openModal(book));
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(book); }
+        });
+
+        return card;
+      }
+
+      /* ── モーダル ── */
+      function openModal(book) {
+        const coverEl = document.getElementById('modal-cover');
+        coverEl.innerHTML = '';
+        const modalCoverSrc = safeImageSrc(book.cover);
+        if (modalCoverSrc) {
+          const img = document.createElement('img');
+          img.src = modalCoverSrc; img.alt = book.title;
+          coverEl.appendChild(img);
+        } else {
+          const fb = document.createElement('div');
+          fb.className = 'modal-cover-fallback';
+          fb.innerHTML = `<span>${escHtml(book.title)}<br><br>${escHtml(book.author)}</span>`;
+          coverEl.appendChild(fb);
+        }
+        document.getElementById('modal-tag').textContent    = book.genre    || '';
+        document.getElementById('modal-title').textContent  = book.title    || '';
+        document.getElementById('modal-author').textContent = book.author   || '';
+        document.getElementById('modal-review').textContent = book.review   || '';
+        document.getElementById('modal-genre').textContent  = book.genre    || '';
+        document.getElementById('modal-amazon').href        = safeExternalUrl(book.amazonUrl);
+
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() {
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+      function escHtml(s) {
+        return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
+      /* 外部リンクURL検証: http/https のみ許可（javascript: 等のXSS防止） */
+      function safeExternalUrl(url) {
+        if (!url) return '#';
+        try {
+          const u = new URL(url, location.href);
+          if (u.protocol === 'http:' || u.protocol === 'https:') return u.href;
+        } catch (e) { /* 不正なURLは弾く */ }
+        return '#';
+      }
+
+      /* 画像パス検証: 相対パス or http/https のみ許可 */
+      function safeImageSrc(src) {
+        if (!src) return '';
+        if (/^(javascript|data|vbscript):/i.test(src.trim())) return '';
+        try {
+          const u = new URL(src, location.href);
+          if (u.protocol === 'http:' || u.protocol === 'https:') return src;
+        } catch (e) { /* 不正なURLは弾く */ }
+        return '';
+      }
+    })();
+  </script>
+  <!-- FOOTER -->
+  <footer class="page-footer">
+    <div class="page-footer-inner">
+      <p class="footer-name">
+        Kaoru Furubayashi
+        <span>Reading List</span>
+      </p>
+      <ul class="footer-links">
+        <li>
+          <a href="https://www.kaoru-furubayashi.com/" target="_blank" rel="noopener noreferrer" aria-label="Home">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9.75L12 3l9 6.75V21a.75.75 0 0 1-.75.75H15v-5.25a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0-.75.75V21.75H3.75A.75.75 0 0 1 3 21V9.75z"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://www.instagram.com/kaoru_desuyo/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://x.com/kaoru_desuyo" target="_blank" rel="noopener noreferrer" aria-label="X">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.258 5.63 5.906-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a href="https://note.com/f_k_2" target="_blank" rel="noopener noreferrer" aria-label="note">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 493 493" fill="currentColor">
+              <rect width="493" height="493" rx="80" ry="80"/>
+              <path d="m139.57,142.06c41.19,0,97.6-2.09,138.1-1.04,54.34,1.39,74.76,25.06,75.45,83.53.69,33.06,0,127.73,0,127.73h-58.79c0-82.83.35-96.5,0-122.6-.69-22.97-7.25-33.92-24.9-36.01-18.69-2.09-71.07-.35-71.07-.35v158.96h-58.79v-210.22Z" fill="var(--bg,#0a0a0a)"/>
+            </svg>
+          </a>
+        </li>
+      </ul>
+      <p class="footer-copy">&copy; Kaoru Furubayashi. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
