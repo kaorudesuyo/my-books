@@ -486,7 +486,7 @@
     /* ============================================================
        データソース: books.xlsx（優先） / books.csv（予備）
        ------------------------------------------------------------
-       本のデータは books.html と同じフォルダに置いた
+       本のデータは index.html と同じフォルダに置いた
        books.xlsx をそのまま読み込みます。CSVへの書き出しは不要です。
 
        列: id, title, author, genre, cover, amazonUrl, review
@@ -495,7 +495,7 @@
        【更新方法】
        1. books.xlsx を Excel で開いて編集・保存
        2. サーバー上の books.xlsx を差し替える
-       3. books.html をブラウザでリロードすれば反映されます
+       3. index.html をブラウザでリロードすれば反映されます
 
        ※ books.xlsx が無い場合のみ books.csv を読みにいきます。
 
@@ -594,7 +594,7 @@
             <h3>データを読み込めませんでした</h3>
             <p>
               <code>books.xlsx</code>（または <code>books.csv</code>）を
-              <code>books.html</code> と同じフォルダに置いてください。<br><br>
+              <code>index.html</code> と同じフォルダに置いてください。<br><br>
               ローカルでHTMLを直接ダブルクリックして開くと、ブラウザのセキュリティ制限でファイルを読み込めません。<br>
               VS Code の Live Server や <code>python3 -m http.server</code> などの簡易サーバー経由でご覧ください。<br><br>
               エラー: ${String(err.message).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
