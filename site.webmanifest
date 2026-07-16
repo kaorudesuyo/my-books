@@ -1,0 +1,11 @@
+{
+  "name": "100 Books That Shaped My Mind",
+  "short_name": "100 Books",
+  "icons": [
+    { "src": "icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone"
+}

@@ -60,3 +60,18 @@ cover フォルダに「番号.jpg」（例: 1.jpg）として保存してくだ
 ・Amazon URL: 99/100冊が商品ページ直リンク（/dp/...）
 ・No.95「意味よさらば」のみ別サイト（valuebooks）のURL
 ・全100冊、重複なし
+
+
+【アイコン（ファビコン / ホーム画面）】
+
+  favicon.ico          … タブ表示用（旧ブラウザ対応）
+  favicon.svg          … タブ表示用（高精細・推奨）
+  favicon-16.png       … タブ表示用
+  favicon-32.png       … タブ表示用
+  apple-touch-icon.png … iPhone/iPadでホーム画面に追加した時のアイコン
+  icon-192.png         … Android用
+  icon-512.png         … Android用 / PWA用
+  site.webmanifest     … アプリ情報の設定ファイル
+
+これら8点も index.html と同じ階層（一番上）に置いてください。
+index.html の <head> から自動で読み込まれます。
