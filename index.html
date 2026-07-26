@@ -636,10 +636,16 @@
 
       /* ── コンベア構築 ── */
       function buildBoth(books) {
-        const speed = Math.max(20, books.length * 2.8);
+        /* 前半を上段、後半を下段に分け、同じ本が上下で重複しないようにする */
+        const mid    = Math.ceil(books.length / 2);
+        const first  = books.slice(0, mid);
+        const second = books.slice(mid);
+
+        const speed = Math.max(20, mid * 2.8);
         document.documentElement.style.setProperty('--conveyor-speed', `${speed}s`);
-        buildTrack(inner1, books);
-        buildTrack(inner2, [...books].reverse());
+
+        buildTrack(inner1, first);
+        buildTrack(inner2, second.length ? second : first);
         countEl.textContent = `${books.length} books`;
       }
 
