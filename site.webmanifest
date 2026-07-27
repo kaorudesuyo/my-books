@@ -1,6 +1,6 @@
 {
-  "name": "100 Books That Shaped My Mind",
-  "short_name": "100 Books",
+  "name": "百書 HYAKUSHO — 私をつくる、百冊の本",
+  "short_name": "百書",
   "icons": [
     { "src": "icon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "icon-512.png", "type": "image/png", "sizes": "512x512" }

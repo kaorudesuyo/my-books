@@ -1,3 +1,5 @@
+『百書 HYAKUSHO』— 私をつくる、百冊の本
+
 【サーバー（GitHub / Netlify）に置くファイル構成】
 
   index.html            … 表示用アプリ（★トップページ）
