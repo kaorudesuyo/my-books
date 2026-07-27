@@ -428,9 +428,75 @@
       font-size: 0.75rem; background: var(--accent);
       border: 1px solid var(--border); padding: 0.1rem 0.4rem; color: rgba(255,255,255,0.7);
     }
+    /* ═══ スプラッシュ（起動演出） ═══ */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+    }
+    #splash svg {
+      width: 96px;
+      height: 96px;
+      animation: splash-zoom 1.15s cubic-bezier(0.55, 0, 0.6, 0.1) 0.35s forwards;
+    }
+    /* アイコンがこちらへ向かってくる: 等倍で静止 → 巨大化しつつ消える */
+    @keyframes splash-zoom {
+      0%   { transform: scale(1);  opacity: 1; }
+      55%  { transform: scale(1);  opacity: 1; }
+      100% { transform: scale(28); opacity: 0; }
+    }
+    #splash.done {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    /* 本体はスプラッシュ中は隠しておき、ふわっと現す */
+    body > :not(#splash) { transition: opacity 0.6s ease; }
+    body.splashing > :not(#splash) { opacity: 0; }
+    /* 動きを減らす設定のユーザーには演出をスキップ */
+    @media (prefers-reduced-motion: reduce) {
+      #splash { display: none; }
+      body.splashing > :not(#splash) { opacity: 1; }
+    }
   </style>
 </head>
-<body>
+<body class="splashing">
+
+  <!-- ═══ 起動スプラッシュ: アイコンが手前に迫って開く ═══ -->
+  <div id="splash" aria-hidden="true">
+    <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <rect width="512" height="512" rx="96" fill="#0a0a0a"/>
+      <g fill="none" stroke="#ffffff" stroke-width="14" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M256 168 C216 140, 150 140, 118 160 L118 348 C150 328, 216 328, 256 356 Z"/>
+        <path d="M256 168 C296 140, 362 140, 394 160 L394 348 C362 328, 296 328, 256 356 Z"/>
+        <line x1="256" y1="168" x2="256" y2="356"/>
+      </g>
+    </svg>
+  </div>
+  <script>
+    (function () {
+      const splash = document.getElementById('splash');
+      const END_MS = 1500;   /* 0.35s待機 + 1.15sズーム */
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function finish() {
+        document.body.classList.remove('splashing');
+        splash.classList.add('done');
+        setTimeout(() => splash.remove(), 300);
+      }
+      if (reduced) { finish(); }
+      else {
+        /* アニメ終了で本体を表示（保険として時間でも発火） */
+        splash.querySelector('svg').addEventListener('animationend', finish, { once: true });
+        setTimeout(finish, END_MS + 400);
+      }
+    })();
+  </script>
+
 
   <!-- HEADER -->
   <header class="page-header">
