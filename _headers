@@ -1,0 +1,34 @@
+# Hyakusho - HTTP response headers for Netlify.
+# Keep this file next to index.html. Lines starting with "#" are comments.
+
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; require-trusted-types-for 'script'; trusted-types hyakusho-xml; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: accelerometer=(), browsing-topics=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), hid=(), magnetometer=(), microphone=(), midi=(), payment=(), serial=(), usb=(), xr-spatial-tracking=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-site
+  X-Permitted-Cross-Domain-Policies: none
+
+# Declare the text encoding explicitly so Japanese text can never be mis-decoded.
+/
+  Content-Type: text/html; charset=UTF-8
+/index.html
+  Content-Type: text/html; charset=UTF-8
+/404.html
+  Content-Type: text/html; charset=UTF-8
+/assets/*.css
+  Content-Type: text/css; charset=UTF-8
+/assets/*.js
+  Content-Type: text/javascript; charset=UTF-8
+/books.csv
+  Content-Type: text/csv; charset=UTF-8
+  X-Robots-Tag: noindex
+/books.xlsx
+  X-Robots-Tag: noindex
+
+# Cover images rarely change: let browsers keep them for a day.
+/cover/*
+  Cache-Control: public, max-age=86400
